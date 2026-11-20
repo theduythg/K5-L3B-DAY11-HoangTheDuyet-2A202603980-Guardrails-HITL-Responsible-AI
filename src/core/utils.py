@@ -48,6 +48,12 @@ async def chat_with_agent(agent, runner, user_message: str, session_id=None):
     async for event in runner.run_async(
         user_id=user_id, session_id=session.id, new_message=content
     ):
+        error_message = getattr(event, "error_message", None)
+        if error_message:
+            error_code = getattr(event, "error_code", None) or "unknown"
+            raise RuntimeError(
+                f"Google ADK/Gemini request failed ({error_code}): {error_message}"
+            )
         if hasattr(event, "content") and event.content and event.content.parts:
             for part in event.content.parts:
                 if hasattr(part, "text") and part.text:
